@@ -4,7 +4,7 @@ Este README fornece uma visão geral do projeto, suas funcionalidades e informa�
 
 ## Funcionalidades
 
-)
+
 
 ## Autenticação com Supabase
 
