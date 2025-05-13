@@ -4,6 +4,26 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase_client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
+ * Verifica se um usuário existe no Supabase.
+ * @param {string} email O email do usuário.
+ * @returns {Promise<{data: boolean, error: any}>}
+ */
+async function checkUserExists(email) {
+    try {
+        const { data: { user }, error } = await supabase_client.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: false
+            }
+        });
+        // If there's no error, the user exists
+        return { data: !error, error: null };
+    } catch (error) {
+        return { data: null, error };
+    }
+}
+
+/**
  * Realiza o cadastro de um novo usuário.
  * @param {string} email O email do usuário.
  * @param {string} password A senha do usuário.
@@ -72,4 +92,4 @@ function listenToAuthChanges() {
             }
         }
     });
-} 
+}
