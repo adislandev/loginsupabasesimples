@@ -39,14 +39,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = loginForm.email.value;
             const password = loginForm.password.value;
 
-            const { data, error } = await signIn(email, password);
+            try {
+                // Primeiro, verifica se o usuário existe
+                const { data: existingUser, error: checkError } = await checkUserExists(email);
+                
+                if (checkError) {
+                    displayError('Erro ao verificar usuário');
+                    return;
+                }
 
-            if (error) {
-                displayError(error.message);
-            } else {
-                // O onAuthStateChange em auth.js cuidará do redirecionamento
-                // Não é necessário redirecionar aqui explicitamente se o login for bem-sucedido
-                // A menos que você queira mostrar uma mensagem de sucesso antes do redirecionamento
+                if (!existingUser) {
+                    displayError('Usuário não encontrado. Por favor, cadastre-se.');
+                    return;
+                }
+
+                // Se o usuário existe, tenta fazer login
+                const { data, error } = await signIn(email, password);
+
+                if (error) {
+                    displayError('Senha incorreta');
+                } else {
+                    displaySuccess('Login realizado com sucesso! Redirecionando...');
+                    setTimeout(() => {
+                        window.location.href = 'menu.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                displayError('Erro ao realizar login');
             }
         });
     }
@@ -64,18 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) {
                 displayError(error.message);
             } else {
-                displaySuccess('Cadastro realizado com sucesso! Verifique seu email para confirmação, se aplicável. Você será redirecionado em breve.');
-                // O onAuthStateChange em auth.js pode cuidar do redirecionamento após a confirmação do e-mail (se habilitado)
-                // ou imediatamente se a confirmação não for necessária/após o primeiro login.
-                // Se a confirmação de email estiver habilitada no Supabase, o usuário não será logado imediatamente.
-                if (data.user && data.user.identities && data.user.identities.length > 0) {
-                     // Usuário criado, mas pode precisar de confirmação
-                     if (!data.session) { // ou data.user.email_confirmed_at === null
-                        // Não há sessão ativa, significa que a confirmação de e-mail é provavelmente necessária
-                     }
-                }
-                 // Para um redirecionamento imediato para o login após o cadastro bem-sucedido:
-                 // setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+                displaySuccess('Cadastro realizado com sucesso! Redirecionando para a página de login...');
+                // Redireciona para a página de login após 2 segundos
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
             }
         });
     }
@@ -100,8 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (user) {
                 userEmailElement.textContent = user.email;
             } else {
-                 // Isso não deve acontecer se onAuthStateChange estiver funcionando corretamente,
-                 // pois o usuário não logado seria redirecionado de menu.html
                 console.log("Tentativa de exibir informações do usuário no menu, mas nenhum usuário encontrado.");
             }
         }
@@ -111,5 +121,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.endsWith('menu.html')) {
         displayUserInfo();
     }
-
-}); 
+});
